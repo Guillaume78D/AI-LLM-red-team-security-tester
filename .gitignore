@@ -1,0 +1,9 @@
+.env
+venv/
+__pycache__/
+*.db
+reports/*.pdf
+raw_results.json
+evaluated_results.json
+.vscode/
+.DS_Store

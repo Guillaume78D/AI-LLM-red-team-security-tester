@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI LLM Security Tester</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">AI LLM SECURITY TESTER</div>
+    <div class="controls">
+      <select id="run-select" title="Choose a test run"></select>
+      <span class="pill">Target: {{ target_name }}</span>
+    </div>
+  </header>
+
+  <main>
+    <div id="error" class="error hidden"></div>
+    <div id="empty" class="empty hidden">
+      No test run yet. Run <code>python run_tests.py</code> in your terminal, then refresh this page.
+    </div>
+
+    <div id="content" class="hidden">
+      <section class="cards" id="cards"></section>
+
+      <section class="grid2">
+        <div class="panel">
+          <h2>Overall Risk</h2>
+          <div class="risk-row">
+            <div class="donut-wrap">
+              <div id="donut" class="donut">
+                <div class="donut-hole"><b id="donut-total">0</b><span>Tests</span></div>
+              </div>
+            </div>
+            <div>
+              <div id="risk-badge" class="risk-badge">-</div>
+              <div id="risk-score" class="muted"></div>
+              <ul id="legend" class="legend"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Results by Category</h2>
+          <div id="categories"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="table-head">
+          <h2>Test Results</h2>
+          <div class="filters" id="filters">
+            <button data-filter="ALL" class="active">All</button>
+            <button data-filter="FAIL">Failed</button>
+            <button data-filter="PASS">Passed</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Category</th><th>Result</th><th>Severity</th><th>Evaluated by</th></tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+        <p class="muted small">Click a row to see the prompt, the model's response and the reason.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Generate Security Report</h2>
+        <label class="field">Target name
+          <input id="report-target" type="text" value="{{ target_name }}">
+        </label>
+        <div class="checks">
+          <label><input type="checkbox" id="opt-evidence" checked> Include evidence (model responses)</label>
+          <label><input type="checkbox" id="opt-risk" checked> Include risk analysis</label>
+          <label><input type="checkbox" id="opt-reco" checked> Include recommendations</label>
+          <label><input type="checkbox" id="opt-owasp" checked> Include OWASP LLM mapping</label>
+        </div>
+        <button id="report-btn" class="primary">Generate Security Report (PDF)</button>
+        <div id="report-status" class="muted small"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
