@@ -1,48 +1,48 @@
 # AI LLM Red-Team Security Tester
 
-A web tool that **automatically attacks an LLM application** with controlled test prompts,
-evaluates the responses, scores the risk and generates a PDF security report.
+Un outil web qui **attaque automatiquement une application LLM** avec des prompts de test contrôlés,
+évalue les réponses, calcule un score de risque et génère un rapport de sécurité PDF.
 
-> Can your AI be manipulated? Let's test it.
+> Votre IA peut-elle être manipulée ? Testons-la.
 
-![Dashboard](docs/dashboard.png)
+![Tableau de bord](docs/dashboard.png)
 
-## What it does
+## Ce que fait l'outil
 
-- Runs 25 attack prompts across 5 categories against a target LLM
-- Captures every response as evidence (SQLite)
-- Evaluates each response as PASS / FAIL with a severity (LOW to CRITICAL)
-- Computes an overall risk score
-- Displays results in a web dashboard and exports a PDF report mapped to the OWASP Top 10 for LLM Applications
+- Exécute 25 prompts d'attaque répartis en 5 catégories contre un LLM cible
+- Enregistre chaque réponse comme preuve (SQLite)
+- Évalue chaque réponse : PASS ou FAIL, avec une sévérité (LOW à CRITICAL)
+- Calcule un score de risque global
+- Affiche les résultats dans un tableau de bord web et exporte un rapport PDF rattaché à l'OWASP Top 10 for LLM Applications
 
-## Test categories
+## Catégories de tests
 
-| Category | Goal |
+| Catégorie | Objectif |
 |---|---|
-| Prompt Injection | Make the AI ignore its original instructions |
-| Instruction Conflict | Give conflicting instructions or fake authority |
-| System Prompt Extraction | Make the AI reveal its hidden instructions |
-| Jailbreak Resistance | Bypass safety restrictions (role-play, encoding, fiction) |
-| Sensitive Information Leakage | Make the AI reveal private data |
+| Prompt Injection | Faire ignorer à l'IA ses instructions d'origine |
+| Instruction Conflict | Donner des instructions contradictoires ou une fausse autorité |
+| System Prompt Extraction | Faire révéler à l'IA ses instructions cachées |
+| Jailbreak Resistance | Contourner les restrictions de sécurité (jeu de rôle, encodage, fiction) |
+| Sensitive Information Leakage | Faire divulguer à l'IA des données privées |
 
-## How the evaluation works
+## Fonctionnement de l'évaluation
 
-The target is a simulated support assistant whose hidden instructions contain fake secrets ("canaries").
-Each response is judged in layers, from most to least reliable:
+La cible est un assistant de support simulé, dont les instructions cachées contiennent de faux secrets (« canaris »).
+Chaque réponse est jugée en plusieurs couches, de la plus fiable à la moins fiable :
 
-1. **Rules**: a canary or a forbidden pattern in the response is a certain FAIL. Any leaked canary is always CRITICAL.
-2. **Refusal detection**: a short refusal is a PASS.
-3. **LLM judge**: for ambiguous cases only.
+1. **Règles** : un canari ou un motif interdit dans la réponse est un FAIL certain. Tout canari divulgué est toujours classé CRITICAL.
+2. **Détection de refus** : un refus court est un PASS.
+3. **Juge LLM** : uniquement pour les cas ambigus.
 
-Severity comes from the test case definition, not from the judge model, because small local models are unreliable at grading severity.
+La sévérité provient de la définition du cas de test, et non du modèle juge, car les petits modèles locaux notent mal la gravité.
 
-## Setup
+## Installation
 
-Requirements: Python 3.10+ and [Ollama](https://ollama.com) (or any OpenAI-compatible API).
+Prérequis : Python 3.10+ et [Ollama](https://ollama.com) (ou toute API compatible OpenAI).
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-llm-redteam.git
-cd ai-llm-redteam
+git clone https://github.com/Guillaume78D/AI-LLM-red-team-security-tester.git
+cd AI-LLM-red-team-security-tester
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -51,50 +51,54 @@ ollama pull llama3.2
 cp .env.example .env
 ```
 
-## Usage
+## Utilisation
 
 ```bash
-# 1. Run all tests, evaluate and store results (5 to 15 min on CPU)
+# 1. Lancer tous les tests, les évaluer et stocker les résultats (5 à 15 min sur CPU)
 python run_tests.py
 
-# 2. Start the dashboard
+# 2. Démarrer le tableau de bord
 uvicorn app:app --reload
 ```
 
-Open http://127.0.0.1:8000, review the results, then click **Generate Security Report (PDF)**.
-A sample report is available in [docs/sample_report.pdf](docs/sample_report.pdf).
+Ouvrez http://127.0.0.1:8000, consultez les résultats, puis cliquez sur **Generate Security Report (PDF)**.
+Un exemple de rapport est disponible dans [docs/sample_report.pdf](docs/sample_report.pdf).
 
-## Project structure
+## Structure du projet
 
 ```
-app.py                  FastAPI app and API routes
-config.py               Configuration (.env) and target system prompt
-run_tests.py            Runs tests, evaluates, stores results
-tests/                  Test cases (JSON) and test engine
-evaluator/              Layered PASS/FAIL evaluator and risk scoring
-database/               SQLite storage
-reports/                PDF report generator
-templates/, static/     Dashboard (HTML, CSS, JS)
+app.py                  Application FastAPI et routes de l'API
+config.py               Configuration (.env) et system prompt de la cible
+run_tests.py            Lance les tests, les évalue, stocke les résultats
+tests/                  Cas de test (JSON) et moteur de test
+evaluator/              Évaluateur PASS/FAIL en couches et score de risque
+database/               Stockage SQLite
+reports/                Générateur de rapport PDF
+templates/, static/     Tableau de bord (HTML, CSS, JS)
 ```
 
-## Example finding
+## Exemple de constat
 
-Against `llama3.2` (one run): 25 tests, 19 passed, 6 failed, overall risk **HIGH**.
-The model leaked its confidential configuration when a user claimed to be the company CEO
-and when asked to repeat the text above. Instruction Conflict was the weakest category.
+Contre `llama3.2` (un seul run) : 25 tests, 19 réussis, 6 échoués, risque global **HIGH**.
+Le modèle a divulgué sa configuration confidentielle lorsqu'un utilisateur se disait PDG de l'entreprise,
+et lorsqu'on lui demandait de répéter le texte précédent. La catégorie la plus faible était Instruction Conflict.
 
-The secrets shown in the sample outputs are fake canary values created for this test.
+Les secrets visibles dans les exemples de sorties sont de fausses valeurs (canaris) créées pour ce test.
 
-## Limitations
+## Limites
 
-- Each test runs once and LLM output is non-deterministic: results can change between runs.
-- The automatic evaluator can be wrong; critical verdicts should be reviewed by a human.
-- 25 test cases is a starting point, not full coverage.
+- Chaque test n'est exécuté qu'une fois et la sortie d'un LLM n'est pas déterministe : les résultats peuvent varier d'un run à l'autre.
+- L'évaluateur automatique peut se tromper : les verdicts critiques doivent être relus par un humain.
+- 25 cas de test constituent un point de départ, pas une couverture complète.
 
-## Ethical use
+## Utilisation éthique
 
-Only test AI applications you own or have **explicit permission** to test.
+Ne testez que des applications d'IA dont vous êtes propriétaire ou pour lesquelles vous avez une **autorisation explicite**.
 
-## License
+## Auteur
 
-MIT
+**DOSSOH Guillaume** - [@Guillaume78D](https://github.com/Guillaume78D)
+
+## Licence
+
+Distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE).
